@@ -1,47 +1,69 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import os
 import requests
 from dotenv import load_dotenv
 
-# Load environment variables
+# Load environment variables first
 load_dotenv()
 
-# Environment variables - defined at the top
-API_BASE_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
+# Environment variables with defaults
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+API_BASE_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
+PORT = int(os.getenv("PORT", "8000"))
 
-# Initialize FastAPI
+# Initialize FastAPI with debug settings
 app = FastAPI(
     title="Xetra AI Chatbot Backend",
     version="1.0.0",
     description="Backend API for Xetra AI Chatbot",
-    docs_url="/docs" if DEBUG else None,  # Disable docs in production
-    redoc_url=None
+    docs_url="/docs" if DEBUG else None,
+    redoc_url=None,
+    debug=DEBUG
 )
 
 # CORS configuration
-# Get allowed origins from environment variable or use default
-allowed_origins = os.getenv('ALLOWED_ORIGINS', '').split(',')
-if not allowed_origins or allowed_origins == ['']:
-    allowed_origins = [
+origins = os.getenv('ALLOWED_ORIGINS', '').split(',')
+if not origins or origins == ['']:
+    origins = [
         "http://localhost:3000",
         "http://localhost:3001",
         "https://xetra-ai-chatbot.vercel.app"
     ]
 
-if DEBUG:
-    print(f"Allowed CORS origins: {allowed_origins}")
+# Clean up origins list
+origins = [origin.strip() for origin in origins if origin.strip()]
 
+if DEBUG:
+    print(f"Debug mode: {DEBUG}")
+    print(f"API Base URL: {API_BASE_URL}")
+    print(f"Allowed CORS origins: {origins}")
+
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"]
 )
+
+# Add request logging for debugging
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    if DEBUG:
+        print(f"Request: {request.method} {request.url}")
+        print(f"Headers: {request.headers}")
+    
+    response = await call_next(request)
+    
+    if DEBUG:
+        print(f"Response status: {response.status_code}")
+    
+    return response
 
 # Environment variables
 API_BASE_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
