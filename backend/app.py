@@ -18,18 +18,21 @@ app = FastAPI(
 )
 
 # CORS configuration
-origins = [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "https://xetra-ai-chatbot.vercel.app",
-    "https://xetra-ai-chatbot.vercel.app/*",
-    "https://*.vercel.app",
-    "https://*.vercel.app/*"
-]
+# Get allowed origins from environment variable or use default
+allowed_origins = os.getenv('ALLOWED_ORIGINS', '').split(',')
+if not allowed_origins or allowed_origins == ['']:
+    allowed_origins = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://xetra-ai-chatbot.vercel.app"
+    ]
+
+if DEBUG:
+    print(f"Allowed CORS origins: {allowed_origins}")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
