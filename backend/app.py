@@ -75,11 +75,11 @@ class ChatRequest(BaseModel):
     temperature: float
     persona: str
 
-@app.get("/")
+@app.get("/api/")
 async def root():
     return {"message": "Welcome to Xetra AI Chatbot"}
 
-@app.post("/chat")
+@app.post("/api/chat")
 async def chat(request: ChatRequest):
     """
     Process chat messages and return AI responses.
