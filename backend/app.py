@@ -8,12 +8,16 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Environment variables - defined at the top
+API_BASE_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
+DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+
 # Initialize FastAPI
 app = FastAPI(
     title="Xetra AI Chatbot Backend",
     version="1.0.0",
     description="Backend API for Xetra AI Chatbot",
-    docs_url="/docs",
+    docs_url="/docs" if DEBUG else None,  # Disable docs in production
     redoc_url=None
 )
 
